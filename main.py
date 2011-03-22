@@ -18,7 +18,7 @@ if __name__ == "__main__":
       playerNames.append("Player %s" % ii)
     
   g = Game(playerNames, playerViews)
-  g.start()
+  g.run()
     
   
     

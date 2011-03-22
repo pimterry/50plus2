@@ -99,7 +99,7 @@ class ConsoleView:
     print "%s won the trick" % playerId
     
   def scores(self, scores):
-    print "Scores: %s" % scores
+    print "Scores:\n%s" % map(lambda (k, v): "%s = %s" % (k, v), scores.items())
     
   def gameOver(self):
     print "Game over!"
