@@ -8,8 +8,7 @@ import tornado.web
 from stormed import Connection, Message
 from stormed.channel import Consumer
 
-from game.model.cards import *
-from game.model.game_state import Bid  
+from game.model import *
 
 class CometHandler(tornado.web.RequestHandler):
   """
@@ -65,9 +64,7 @@ class CometHandler(tornado.web.RequestHandler):
       msg['bid'] = Bid(msg['bid'])
       
     if 'card' in msg:
-      suit = Suits[msg['card']['suit']]
-      value = Values[msg['card']['value']]
-      msg['card'] = Card(suit, value)
+      msg['card'] = Card(msg['card']['suit'], msg['card']['value'])
       
     self.mq.publish(Message(pickle.dumps(msg)), exchange = '', routing_key=self.outQueue)    
     
@@ -94,8 +91,8 @@ class CometHandler(tornado.web.RequestHandler):
     # Suits are in alphabetical order (0 clubs, 1 diamonds etc), values in 
     # standard order, aces high, all 0 indexed.
     if 'hand' in data:
-      data['hand'] = map(lambda c : {'suit' : c.suit.index, 'value' : c.value.index}, 
-                         data['hand'])
+      data['hand'] = map(lambda c : {'suit' : c.suit, 
+                                     'value' : c.value}, data['hand'])
       
     # Turn bids (lists of Bid objects) into lists of numbers, with
     # 0 as nil and -1 as double nil.
@@ -105,8 +102,8 @@ class CometHandler(tornado.web.RequestHandler):
       
     # Turn individual cards into key'd maps.
     elif 'card' in data:
-      data['card'] = {'suit' : data['card'].suit.index, 
-                      'value' : data['card'].value.index}
+      data['card'] = {'suit' : data['card'].suit, 
+                      'value' : data['card'].value }
       
     # If the connection got dropped, we leave this, and we give it back to the MQ, so we 
     # can resend it out next time.
@@ -114,7 +111,7 @@ class CometHandler(tornado.web.RequestHandler):
       print "* Comet was closed whilst passing on message"
       msg.reject() # Marks the message as not sent.
       return      
-      
+    
     self.write(json.dumps(data))
     self.finish()
     

@@ -101,7 +101,7 @@ function connect()
 {
   connection = $.post(url='/request',
                       data={ gameId : gameId, userId : userId },
-                      success=receive);
+                      success=receive);         
 }
 
 function reconnect()
@@ -113,7 +113,7 @@ function reconnect()
 
 function disconnect()
 {
-  send({'async' : true, 'type' : 'quit'});
+  // send({'async' : true, 'type' : 'quit'});
   connection.abort()
 }
 

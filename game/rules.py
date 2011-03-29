@@ -1,4 +1,4 @@
-from model.cards import *
+from .model import *
 
 class SpadesRule:
 
@@ -8,10 +8,11 @@ class SpadesRule:
     """
     winningCard = trick.values()[0]
     winningPlayer = trick.keys()[0]
+    spades = suits.index('Spades')
     
     for p, c in trick.items():
-      if ((c.suit.index == winningCard.suit.index and c.value.index > winningCard.value.index) or 
-          (c.suit.index == spades.index and winningCard.suit.index != spades.index)):
+      if (c.suit == winningCard.suit and c.value > winningCard.value) or \
+          (c.suit == spades and winningCard.suit != spades):
         winningCard = c
         winningPlayer = p
         

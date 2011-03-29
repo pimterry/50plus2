@@ -1,80 +1,34 @@
 from random import shuffle, randint
-from enum import Enum
-import re
-from game.util import OrderedDict
-from game.rules import SpadesRule
-from player import Player, Partnership
-from cards import *
 
-TrickState = OrderedDict
-BidState = OrderedDict
-
-class Bid:
-
-  def __init__(self, bid):
-    if isinstance(bid, str):      
-      bid = bid.lower()      
-      if re.match(bid, 'double.?nil') or bid == '00':
-        bid = -1
-      elif bid == 'nil':
-        bid = 0
-      elif bid.isdigit():
-        bid = int(bid)
-    
-    if not isinstance(bid, int) or bid < -1 or bid > 13:
-      raise Exception("Instancing invalid bid!")
-    else:
-      self.value = bid
-      
-  @property
-  def points(self):
-    if self.isDoubleNil():
-      return 200
-    elif self.value == 0:
-      return 100
-    else:
-      return self.value * 10
-  
-  @property
-  def target(self):
-    if self.isDoubleNil():
-      return 0
-    else:
-      return self.value
-      
-  def isDoubleNil(self):
-    return self.value == -1
-    
-  def __str__(self):
-    if self.value is 0:
-      return 'nil'
-    elif self.value is -1:
-      return 'double-nil'
-    else:
-      return str(self.value)
+from .rules import SpadesRule
+from .model import *
     
 class Game:
+  """
+  The definition of the flow of a game of spaodes. Build it with some players,
+  call run().
+  """
 
-  def __init__(self, playerNames, playerViews):
+  def __init__(self, players):
     self.ruleStack = [SpadesRule()]
-  
-    ids = range(len(playerNames))
-    self.players = map(lambda (n, i, v) : Player(n, i, None, v), zip(playerNames, ids, playerViews))
+    self.players = players
     
-    Partnership(*self.players[0::2])
-    Partnership(*self.players[1::2])    
+    # Every player should have a seat id that accurately describes where 
+    # they're sitting.
+    assert all(i == p.seat for i, p in enumerate(self.players))
     
-    for p in self.players:
-      p.view.setIds(p.id, (p.id + 2) % 4)
+    # Set up partnerships between opposite players
+    setupPartnership(*self.players[0::2])
+    setupPartnership(*self.players[1::2])    
         
   def runRound(self, dealerIndex = None):      
     # Deal the cards
     self.deck = deck[:]
     shuffle(self.deck)
-    hands = [self.deck[i::4] for i in range(len(self.players))]
+    hands = [self.deck[i::len(self.players)] for i in range(len(self.players))]
     
     for hand in hands:
-      hand.sort(key=lambda c : ([diamonds, clubs, hearts, spades].index(c.suit), c.value))
+      hand.sort(key=lambda c : ([1,0,2,3].index(c.suit), c.value))
     
     for p in self.players:
       p.tricks = 0
@@ -93,25 +47,25 @@ class Game:
       
       # Ask if they want to go double nil.      
       doubleNil = p.view.goDoubleNil()
+      # Regardless of the response, they get to see their hand now.
       p.view.showHand()      
       
       if doubleNil:
         bid = Bid('00')
-        print "Player %s bid 00" % i
         
-      # No? Now they've seen their cards, ask again.
       else:
+        # No? Now they've seen their cards, ask again.
         bid = p.view.bidSomethingSensible()
-        print "Player %s bid %s" % (i, bid)
         if bid.isDoubleNil():
           raise Exception("Can't bid double-nil after looking at your cards! Jeez.")
           
-      bids[p.id] = bid
+      bids[p.seat] = bid
       p.bid = bid
       
       for p2 in self.players:
-        p2.view.playerBid(i, bid)
+        p2.view.playerBid(p.seat, bid)
         
+    # The person who dealt leads, initially.
     leader = dealerIndex
     
     # Play some damn tricks.
@@ -119,24 +73,25 @@ class Game:
       # Ask each player to play a card
       for i in range(leader, leader + 4):
         p = self.players[i % 4]
-        card = p.view.playACard()
-        
+        card = p.view.playACard()        
         p.hand.remove(card)
         
         if i is leader:
-          ledSuit = card.suit
+          leadSuit = card.suit
+          
         else:
-          if card.suit.index is not ledSuit.index and \
-             any(map(lambda c : c.suit.index is ledSuit.index, p.hand)):
+          # Check the card played was legal (either they followed suit, or
+          # they had none of the lead suit)
+          if card.suit != leadSuit and any(c for c in p.hand if c.suit == leadSuit):
             raise Exception("%s played %s on %s, but their hand is %s!" % 
-                            (p.name, card, ledSuit, map(str,p.hand)))
+                            (p.name, card, leadSuit, map(str,p.hand)))
         
         # Record this card in the current trick.
-        trick[i % 4] = card
+        trick[p.seat] = card
         
         # Tell everybody what they played.
         for p2 in self.players:
-          p2.view.playerPlayed(i, card)
+          p2.view.playerPlayed(p.seat, card)
       
       # Go through the rules in order, until one of them knows who won the trick.
       # TODO Consider inverse order, passing previous result to each Rule en route up.
@@ -156,7 +111,6 @@ class Game:
         
     # Round over, count points, update scores.
     for p in self.players:
-      print "Player %s made %s aiming for %s" % (p, p.tricks, p.bid.target)    
       # If you bid 0/00, you must make exactly 0. If you bid anything else,
       # you have to make that or more.
       if (p.bid.target == 0 and p.tricks == 0) or \
@@ -180,7 +134,7 @@ class Game:
     
     while not gameOver:
       for player in self.players:
-        player.view.startRound(dealerIndex)      
+        player.view.startRound(dealerIndex)
       
       self.runRound(dealerIndex)
       dealerIndex = (dealerIndex + 1) % len(self.players)
