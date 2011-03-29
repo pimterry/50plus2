@@ -1,0 +1,480 @@
+@font-face
+{
+  font-family: Franchise;
+  src: url('/static/Franchise-Bold-hinted.ttf');
+}
+
+@font-face
+{
+  font-family: LeagueGothic;
+  src: url('/static/League Gothic.otf');
+}
+
+body 
+{
+  font-family: LeagueGothic;
+  line-height: 1;
+  overflow: hidden;
+}
+
+.button
+{
+  padding: 0.3em 0 0.25em;
+  color: #000;
+  text-decoration: none;
+	border-radius: 12px;
+	-webkit-border-radius: 12px;
+	-moz-border-radius: 12px;
+	box-shadow: 1px 1px 4px rgba(0,0,0,.5);
+	-webkit-box-shadow: 1px 1px 4px rgba(0,0,0,.5);
+	-moz-box-shadow: 1px 1px 4px rgba(0,0,0,.5);
+	text-shadow: #fff 0px 1px 1px;
+	background: -webkit-gradient(linear, left top, left bottom, from(#eeeeee), to(#cccccc));
+	background: -moz-linear-gradient(top,  #eeeeee,  #cccccc);
+	filter:  progid:DXImageTransform.Microsoft.gradient(startColorstr='#eeeeee', endColorstr='#cccccc');
+}
+
+.button:active
+{
+	background: -webkit-gradient(linear, left top, left bottom, from(#cccccc), to(#eeeeee));
+	background: -moz-linear-gradient(top,  #cccccc,  #eeeeee);
+	filter:  progid:DXImageTransform.Microsoft.gradient(startColorstr='#cccccc', endColorstr='#eeeeee');
+}
+
+.big
+{
+  font-size: 38pt;
+  font-weight: bold;
+}
+
+.vbig
+{
+  font-size: 80pt;
+  font-weight: bolder;
+}
+
+#playButton
+{
+  background-color: black;
+  color: white;
+  border: none;
+}
+
+#scores
+{
+  font-size: 40pt;
+  margin: 10px;
+  display: none;
+}
+
+#youScore
+{
+  color: #0A0;
+}
+
+#themScore
+{
+  color: #A00;
+}
+
+.playerBox
+{
+  position: absolute;
+  text-align: center;
+  overflow: hidden;
+}
+
+.playerBox#playerLeft
+{
+  top: 35%;
+  left: 0;
+  
+  height: 30%;
+  width: 28%;
+}
+
+.playerBox#playerTop
+{
+  top: 0;
+  left: 20%;
+  
+  height: 25%;
+  width: 50%;
+  margin: 0 5%;
+}
+
+.playerBox#playerRight
+{
+  top: 35%;
+  right: 0;
+  
+  height: 30%;
+  width: 28%;
+}
+
+.playerBox#playerBottom
+{
+  bottom: 0;
+  left: 0;
+  
+  height: 30%;
+  width: 100%;
+}
+
+.statusBox
+{
+  background-color: #001b66;
+  font-size: 60pt;  
+  width: 96%;
+  height: 1em;
+  padding: 2.1%;
+  color: #fff;
+}
+
+#playerLeft .statusBox
+{
+  border-radius: 0 6px 6px 0;
+  -moz-border-radius: 0 6px 6px 0;
+  -webkit-border-radius: 0 6px 6px 0;    
+}
+
+#playerTop .statusBox
+{
+  border-radius: 0 0 6px 6px;
+  -moz-border-radius: 0 0 6px 6px;
+  -webkit-border-radius: 0 0 6px 6px;   
+  padding: 1.9% 2.1%;   
+}
+
+#playerRight .statusBox
+{
+  border-radius: 6px 0 0 6px;
+  -moz-border-radius: 6px 0 0 6px;
+  -webkit-border-radius: 6px 0 0 6px;    
+}
+
+#playerBottom .statusBox
+{
+  position: absolute;
+  bottom: 0;
+  z-index: 2;
+  font-style: italic;
+  padding: 1.5% 2.1%;
+  z-index: 10;
+}
+
+/*
+###########
+# TARGETS #
+###########
+*/
+
+
+.target
+{
+  overflow: hidden;
+  position: relative;
+  width: 100px;
+  height: 100px;
+  display: none; 
+  margin: 10px;   
+}
+
+.targetImg
+{
+  width: 100px;
+  z-index: 0;
+}
+
+.targetNum
+{
+  position: absolute;
+  top: 0.08em;
+  left: -0.01em;
+  width: 100%;
+  text-align: center;
+  font-size: 70pt;
+  text-shadow: 0 0 15px #fff;
+  z-index: 1;
+}
+
+#playerTop .target
+{
+  position: absolute;
+  left: 0;
+  top: 48%;
+}
+
+#localTarget
+{
+  position: absolute;
+  left: 15px;
+  bottom: 15px;
+  margin: 0;
+  z-index: 12; 
+  height: 100px;
+}
+
+#playerLeft .target, #playerRight .target
+{
+  position: absolute;
+  left: 20%;
+  top: 1.3em; 
+  font-size: 60pt; 
+}
+
+/*
+################
+# TRICK COUNTS #
+################
+*/
+
+
+.trickCount
+{
+  overflow: hidden;
+  margin: 10px;
+  width: 68px;
+  display: none;
+  position: relative;
+}
+
+.trickCountImg
+{
+  #display: none;
+  z-index: 0;
+}
+
+.trickCountNum
+{
+  position: absolute;
+  top: 0.08em;
+  left: -0.01em;
+  width: 100%;
+  text-align: center;
+  font-size: 70pt;
+  text-shadow: 0 0 10px #fff;
+  z-index: 1;
+}
+
+#playerTop .trickCount
+{
+  position: absolute;
+  right: 0;
+  top: 48%;
+}
+
+#localTrickCount
+{
+  position: absolute;
+  right: 32px;
+  bottom: 12px;
+  margin: 0;
+  z-index: 12;  
+}
+
+#playerLeft .trickCount, #playerRight .trickCount
+{
+  position: absolute;
+  right: 20%;
+  top: 1.25em; 
+  font-size: 60pt; 
+}
+
+
+/*
+##############
+# BID WINDOW #
+##############
+*/
+
+
+
+.bidWindow
+{
+  position: absolute;
+  top: 24%;
+  left: 29%;
+  width: 42%;
+  height: 45%;
+  background-color: #fafafa;
+  text-align: center;
+  font-size: 40pt;
+  -webkit-border-radius: 12px;
+	-moz-border-radius: 12px;
+	box-shadow: 0 0 20px rgba(0,0,0,.9);
+	-webkit-box-shadow: 0 0 20px rgba(0,0,0,.9);
+	-moz-box-shadow: 0 0 20px rgba(0,0,0,.9);
+	display: none;
+  z-index: 101;
+}
+
+.bidWindow .leadDescription
+{
+  font-size: 50pt;
+  margin: 0.6em;
+}
+
+.bidWindow .arrow
+{
+  width: 40px;
+}
+
+.bidWindow #bid0
+{
+  position: absolute;
+  top: 32%;
+  left: 11%;	
+  width: 30%;
+}
+
+.bidWindow #bid0Points
+{
+  position: absolute;
+  top: 32%;
+  right: 12%;
+  padding: 0.3em 0;
+}
+
+.bidWindow #incBid img
+{
+  position: absolute;
+  bottom: 35%;
+  left: 21.5%;	
+  width: 9%;  
+  border: none;
+}
+
+.bidWindow #decBid img
+{
+  position: absolute;
+  top: 88%;
+  left: 21.5%;	
+  width: 9%; 
+  border: none; 
+}
+
+.bidWindow #bidButton
+{
+  position: absolute;
+  top: 65%;
+  left: 11%;	
+  border: none;  
+  width: 30%;  
+}
+
+.bidWindow #otherBidsPoints
+{
+  position: absolute;
+  top: 66%;
+  right: 12%;
+  padding: 0.3em 0;  
+}
+
+.centerArea
+{
+  position: absolute;
+  top: 25%;
+  left: 25%;
+  width: 50%;
+  height: 50%;
+  text-align: center;
+}
+
+.centerArea .arrow
+{
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  z-index: 100;
+  margin-left: -75px;
+  margin-top: -102px;
+  width: 150px;
+  display: none;
+}
+
+.playerTab
+{
+  position: absolute;
+  bottom: 39%;
+  font-size: 50pt;
+  border-radius: 12px 12px 0 0;
+  -moz-border-radius: 12px 12px 0 0;
+  -webkit-border-radius: 12px 12px 0 0;    
+  display: none;
+  z-index: 9;
+}
+
+.playerTab:hover
+{
+  margin-bottom: 0.1em;
+}
+
+.playerTab#showHand
+{
+  width: 30%;
+  left: 15%;
+}
+
+.playerTab#showHand.wide
+{
+  width: 70%;
+  left: 15%;
+}
+
+.playerTab#bid00
+{
+  width: 30%;
+  right: 15%;
+}
+
+#hand
+{
+  margin-left: 15%;
+  padding-top: 3%;
+  height: 100%;
+  width: 70%;
+  display: none;
+  position: relative;
+}
+
+.card
+{
+  top: 10;
+  left: 10;
+  width: 200px;
+  -webkit-border-radius: 15px;
+  -moz-border-radius: 15px;  
+  border-radius: 15px;
+  border: none;
+}
+
+.cardInHand
+{
+  position: relative;
+  z-index: 0;
+  width: 6.7%;
+  float: left;
+  margin: auto;
+  cursor: default;    
+}
+
+.highlightedCard
+{
+  margin-left: -3%;
+  margin-top: -10%;
+}
+
+.lowlightedCard
+{
+  margin-top: 10%;
+  cursor: default;  
+}
+
+.lowlightedCard.highlightedCard
+{
+  margin-top: 8%;
+  cursor: default;
+}
+
+
