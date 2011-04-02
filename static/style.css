@@ -209,7 +209,7 @@ body
 {
   position: absolute;
   left: 15px;
-  bottom: 15px;
+  bottom: 12px;
   margin: 0;
   z-index: 12; 
   height: 100px;
@@ -339,7 +339,7 @@ body
 .bidWindow #incBid img
 {
   position: absolute;
-  bottom: 35%;
+  bottom: 36%;
   left: 21.5%;	
   width: 9%;  
   border: none;
@@ -348,10 +348,12 @@ body
 .bidWindow #decBid img
 {
   position: absolute;
-  top: 88%;
+  top: 66%;
   left: 21.5%;	
   width: 9%; 
   border: none; 
+  font-size: 40pt;
+  margin-top: 1.65em;
 }
 
 .bidWindow #bidButton
@@ -453,27 +455,24 @@ body
 {
   position: relative;
   z-index: 0;
-  width: 6.7%;
-  float: left;
-  margin: auto;
   cursor: default;    
 }
 
 .highlightedCard
 {
   margin-left: -3%;
-  margin-top: -10%;
+  margin-top: -20px;
 }
 
 .lowlightedCard
 {
-  margin-top: 10%;
+  margin-top: 40px;
   cursor: default;  
 }
 
 .lowlightedCard.highlightedCard
 {
-  margin-top: 8%;
+  margin-top: 20px;
   cursor: default;
 }
 
