@@ -1,10 +1,8 @@
-from threading import Semaphore
-import uuid
-import sys
+import uuid, sys, json, time
 import cPickle as pickle
-import json
 
 import tornado.web
+import tornado.ioloop
 from stormed import Connection, Message
 from stormed.channel import Consumer
 
@@ -30,8 +28,11 @@ class CometHandler(tornado.web.RequestHandler):
     self.alreadyJoined = alreadyJoined
     self.messagesToSend = messagesToSend
     
+    self._pingTimeout = None
+    
     self.mqConn = Connection(host='localhost')
     self.mqConn.connect(self._onConnect)
+    
     
   def _onConnect(self):
     self.mq = self.mqConn.channel()  
@@ -53,12 +54,29 @@ class CometHandler(tornado.web.RequestHandler):
     self.mq.queue_declare(self.outQueue)    
     
     self.mq.consume(self.inQueue, self._onRecv)
+      
+    # We need the MQView to know that we're connected, either by us pinging it
+    # or by us sending actual relevant messages:
+    if len(self.messagesToSend) > 0:    
+      for message in self.messagesToSend:
+        self._send(message)
+        
+      # If we're still here in 14 seconds, make sure the MQView knows that we 
+      # haven't disconnected.
+      self._pingTimeout = tornado.ioloop.IOLoop.instance().add_timeout(time.time() + 14, 
+                                                                       self._ping)
     
-    for message in self.messagesToSend:
-      self._send(message)   
+    # If we don't have any messages to send, just starting pinging instead (sooner, since
+    # we don't know when the last message was)
+    else:
+      self._pingTimeout = tornado.ioloop.IOLoop.instance().add_timeout(time.time() + 5, 
+                                                                       self._ping)
     
-  def _send(self, msg):  
-    print "Message from comet: %s" % str(msg)
+  def _send(self, msg):      
+    # These messages are not going to be expected, and the MQView needs
+    # do deal with them now.
+    if 'type' in msg and (msg['type'] == 'quit' or msg['type'] == 'hand'):
+      msg['async'] = True
   
     if 'bid' in msg:
       msg['bid'] = Bid(msg['bid'])
@@ -66,16 +84,24 @@ class CometHandler(tornado.web.RequestHandler):
     if 'card' in msg:
       msg['card'] = Card(msg['card']['suit'], msg['card']['value'])
       
-    self.mq.publish(Message(pickle.dumps(msg)), exchange = '', routing_key=self.outQueue)    
+    self.mq.publish(Message(pickle.dumps(msg)), exchange = '', routing_key=self.outQueue)
+    
+  def _ping(self):
+    self._pingTimeout = None
+    
+    if not self.request.connection.stream.closed() and not self.cancelled:
+      self._send({'type' : 'ping'})
+      self._pingTimeout = tornado.ioloop.IOLoop.instance().add_timeout(time.time() + 14, 
+                                                                       self._ping)   
     
   def on_connection_close(self):
     self.stopConsuming()
     
-  def _onRecv(self, msg):
-    print "Message ready for player %s: %s" % (self.userId, pickle.loads(msg.body))
-  
+  def _onRecv(self, msg):  
     if self.cancelled:
-      print "* Cancelled comet got message! (%s)" % self.userId
+      # Don't print this, it happens quite a lot, not an issue unless we start getting
+      # messages out of order again (should be fixed by our 'ack' messages.
+      #   print "* Cancelled comet got message! (%s)" % self.userId
       msg.reject()
       return
            
@@ -123,5 +149,7 @@ class CometHandler(tornado.web.RequestHandler):
   def stopConsuming(self):
     self.cancelled = True
     self.mqConn.close()
+    if self._pingTimeout:
+      tornado.ioloop.IOLoop.instance().remove_timeout(self._pingTimeout)
 
     

@@ -15,10 +15,13 @@ body
   font-family: LeagueGothic;
   line-height: 1;
   overflow: hidden;
+  abackground-image: url("/static/back.png");
 }
 
 .button
 {
+  cursor: pointer;
+  
   padding: 0.3em 0 0.25em;
   color: #000;
   text-decoration: none;
@@ -41,24 +44,219 @@ body
 	filter:  progid:DXImageTransform.Microsoft.gradient(startColorstr='#cccccc', endColorstr='#eeeeee');
 }
 
-.big
+
+/*
+
+
+  CSS for the front pages (index + search)
+
+
+*/
+
+#spadesBlock
 {
-  font-size: 38pt;
-  font-weight: bold;
+  position: absolute;
+  padding: 2%;
+  width: 91%;
+  left: 2.5%;
+  height: 20%;
+  top: 38%;
+  background-image: url("/static/dark-back.gif");
+  background-color: #000;
+  
+  border-radius: 10px;
+  -moz-border-radius: 10px;
+  -webkit-border-radius: 10px;
+  box-shadow: inset 0 0 1.5em #000;
 }
 
-.vbig
+#logo
 {
-  font-size: 80pt;
-  font-weight: bolder;
+  position: absolute;
+  top: -88px;
+  left: 0;
+  width: 50%;
+  height: 1em;
+  color: #aa0000;
+  font-size: 190px;
+  text-align: center;
+  text-shadow: #333 0 0 2px;
 }
 
-#playButton
+#spadesBlock .button
 {
-  background-color: black;
-  color: white;
-  border: none;
+  font-size: 50pt;
+  font-family: LeagueGothic;  
 }
+
+#spadesBlock #quickPlayBlock
+{
+  float: left;
+  position: relative;
+  height: 100%;
+  width: 48%;
+}
+
+#spadesBlock #playButton
+{
+  width: 100%;  
+  height: 60%;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+}
+
+#spadesBlock #namedPlayBlock
+{
+  float: right;
+  width: 48%;
+  height: 100%;
+  position: relative;
+  text-align: center;
+}
+
+#spadesBlock #namedPlayBlock #nameInput
+{
+  width: 80%;
+  padding: 0 5px;
+  height: 40%;
+  font-size: 30pt;
+  color: #aaa;  
+  font-family: LeagueGothic;    
+  margin-bottom: 1%;
+  border: 0;
+  box-shadow: inset 0 0 2px #000;
+  border-radius: 3px;
+}
+
+#spadesBlock #namedPlayBlock .button
+{
+  width: 50%;
+  height: 60%;
+  position: absolute;
+  bottom: 0;
+  
+  box-shadow: none;
+  -webkit-box-shadow: none;
+  -moz-box-shadow: none;  
+}
+
+#spadesBlock #createButton
+{
+  left: 0;
+  border-top-right-radius: 0;
+  -webkit-border-top-right-radius: 0;
+  -moz-border-radius-topright: 0;
+  
+  border-bottom-right-radius: 0;
+  -webkit-border-bottom-right-radius: 0;
+  -moz-border-radius-bottomright: 0;  
+  
+  border-right-width: 2px;
+  margin-right: 0;
+}
+
+#spadesBlock #searchButton
+{
+  right: 0;
+  border-top-left-radius: 0;
+  -webkit-border-top-left-radius: 0;
+  -moz-border-radius-topleft: 0;
+  
+  border-bottom-left-radius: 0;
+  -webkit-border-bottom-left-radius: 0;
+  -moz-border-radius-bottomleft: 0;
+  
+  border-left-width: 2px;
+  margin-left: 0;  
+}
+
+
+
+/*
+
+
+  Search results CSS
+
+
+*/
+
+#resultsList
+{
+  position: absolute;
+  left: 0;
+  top: 29%;
+  list-style: none;
+  padding: 0 2%;
+  width: 96%;
+}
+
+.gameResult
+{
+  padding: 0;
+  font-size: 30pt;
+  width: 29%;
+  margin: 2%;
+  float: left;
+  background-color: #ddd;  
+  border-radius: 5px;
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+  box-shadow: 1px 1px 4px rgba(0,0,0,.5);
+  -webkit-box-shadow: 1px 1px 4px rgba(0,0,0,.5);
+  -moz-box-shadow: 1px 1px 4px rgba(0,0,0,.5);
+  text-shadow: #fff 0px 1px 1px;
+  background: -webkit-gradient(linear, left top, left bottom, from(#eeeeee), to(#cccccc));
+  background: -moz-linear-gradient(top,  #eeeeee,  #cccccc);
+  filter:  progid:DXImageTransform.Microsoft.gradient(startColorstr='#eeeeee', endColorstr='#cccccc');
+  cursor: pointer;
+}
+
+.highlightedGameResult
+{
+  box-shadow:0 0 15px rgba(0,0,0,.5);
+  -webkit-box-shadow: 0 0 15px rgba(0,0,0,.5);
+  -moz-box-shadow: 0 0 15px rgba(0,0,0,.5);
+}  
+
+.resultDetails
+{
+  margin: 0;
+  padding: 5px;
+  text-align: center;
+}
+
+.resultName
+{
+  border-bottom: solid 1px #888;
+  border-radius: 5px 5px 0 0;
+  -moz-border-radius: 5px 5px 0 0;
+  -webkit-border-radius: 5px 5px 0 0;  
+  height: 28%;
+  margin: auto;
+  position: relative;
+  background-color: #aaa;
+}
+
+.resultStatus
+{
+  border-top: solid 1px #888;
+  padding: 5px 0;
+  background-color: #aaa;  
+  border-radius: 0 0 5px 5px;
+  -moz-border-radius: 0 0 5px 5px;
+  -webkit-border-radius: 0 0 5px 5px;    
+}
+
+
+
+/*
+
+
+  CSS for the game itself
+
+
+*/
 
 #scores
 {
@@ -124,6 +322,8 @@ body
 .statusBox
 {
   background-color: #001b66;
+  background-image: url("/static/dark-back.gif");
+  box-shadow: inset 0 0 0.5em #111;  
   font-size: 60pt;  
   width: 96%;
   height: 1em;
@@ -241,7 +441,6 @@ body
 
 .trickCountImg
 {
-  #display: none;
   z-index: 0;
 }
 
@@ -268,7 +467,7 @@ body
 {
   position: absolute;
   right: 32px;
-  bottom: 12px;
+  bottom: 5px;
   margin: 0;
   z-index: 12;  
 }
@@ -442,8 +641,6 @@ body
 
 .card
 {
-  top: 10;
-  left: 10;
   width: 200px;
   -webkit-border-radius: 15px;
   -moz-border-radius: 15px;  
@@ -475,5 +672,6 @@ body
   margin-top: 20px;
   cursor: default;
 }
+
 
 

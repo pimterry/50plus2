@@ -102,7 +102,7 @@ class Partnership:
     self.score = 0
     
   def __str__(self):
-    return "Team of %s and %s" % (self.players[0], self.players[1])      
+    return "%s and %s" % (self.players[0], self.players[1])      
     
 def setupPartnership(*players):
   partnership = Partnership(players)

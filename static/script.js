@@ -1,10 +1,16 @@
 // *************************************************************
 // * Connection Management:                                    *
 // *************************************************************            
-connection = null;            
+connection = null;
+connectionErrors = 0;
+MAX_CONNECTION_ERRORS = 1;
+gameOver = false;
             
 $(document).ready(function()
 {
+  // Reduce the animation framerate to ~33FPS for performance.
+  jQuery.fx.interval = 30
+  
   function connect()
   {
     connection = $.post(url='/request',
@@ -20,7 +26,7 @@ $(document).ready(function()
     // If we're still on this page in 30 seconds, we're probably not unloading. 
     setTimeout(function() { maybeUnload = false }, 30000)
     
-    if (!gameOver)
+    if (connection)
     {
       // TODO return "Are you sure you want to leave? This will end the current game!"
     }
@@ -31,6 +37,7 @@ $(document).ready(function()
   $(window).unload(function() 
   {
     actualUnload = true
+    
     if (connection)
     {
       disconnect();
@@ -41,15 +48,16 @@ $(document).ready(function()
   {
     if (!actualUnload)
     {
-      alert('Connection was unexpectedly dropped!')
+      if (connectionErrors < MAX_CONNECTION_ERRORS)
+      {
+        connectionErrors += 1
+        reconnect();
+      }
+      else
+      {
+        onGameOver("Sorry, we lost the server...")
+      }
     }
-  }
-
-  // Called if/when we get forcibly disconnected. We don't recover, we just alert
-  // and offer options.
-  function error(status, error)
-  {
-    alert('Disconnected! '+status+' - '+e)
   }
  
   $(document).ajaxError(function(event, request, settings)
@@ -87,13 +95,20 @@ $(document).ready(function()
 		return;
 	});            
   
+  // Wait a little bit before connecting. Useful to make sure the game is set up
+  // server-side.
   setTimeout(function () {
     connect();
-  }, 200);
+  }, 500);
 });
 
 function reconnect()
 {
+  if (connection && connection.readyState == 1)
+  {
+    console.log('Reconnecting while connection still live!')
+    console.trace()
+  }
   connection = $.post(url='/request',
                       data={ gameId : gameId, userId : userId, alreadyJoined : true },
                       success=receive);
@@ -101,8 +116,16 @@ function reconnect()
 
 function disconnect()
 {
-  // send({'async' : true, 'type' : 'quit'});
-  connection.abort()
+  console.log('Disconnecting...')
+  send({'type' : 'quit'});
+  $.post(url='/request',
+         data={ gameId : gameId, 
+                userId : userId, 
+                alreadyJoined : true, 
+                messages : $.toJSON([{'type' : 'quit'}]),
+                async : false },
+         success=receive);
+  connection = null;
 }
 
 function send(msg, type)
@@ -121,6 +144,17 @@ function send(msg, type)
 // Major function. How do we react to each + every time of server message:
 function receive(data)
 {
+  if (!connection || gameOver) return;
+  
+  // Not much we can do without any data. Try again? Might be a server failure, in
+  // which case reconnecting should crash and give us more, or might just be a blip
+  // somewhere that we can ignore...
+  if (!data)
+  {
+    reconnect();
+    return;
+  }
+  
   data = $.parseJSON(data); 
 
   switch(data['type'])
@@ -176,27 +210,6 @@ function receive(data)
     // A card was played.
     case 'card':
       cardPlayed(data['position'], data['card'])
-      
-      // <4 cards on the table, look at the next person whose turn it is.
-      if ($('body > .card').length < 4)
-      {
-        // Point the arrow at them.
-        setLeader((data['position'] + 1) % 4)
-      
-        // Tell the user who they're waiting for.
-        if (data['position'] != 3)
-        {
-          setStatus("Waiting for "+players[data['position'] + 1]+" to play")
-        }
-        else
-        {
-          setStatus("Your Turn")
-        }
-      }
-      else
-      {
-        setStatus("Deciding Winner...")
-      }
       break;
       
     // 4 cards have been played, the trick's been won! Clear away, prep for the next.
@@ -221,6 +234,8 @@ function receive(data)
       $('#scores').show()
       $('.trickCountNum').text('0')
       $('.trickCount').hide()
+      $('.cardInHand').remove()
+      $('#hand').hide()
       $('.target').hide()
       break;
     
@@ -269,11 +284,16 @@ function receive(data)
         default:
           alert('Unknown question '+data['question'])
       } break;
+      
+    case 'gameOver':
+      onGameOver(data['message'])
+      break;
+      
     default:
       alert('Recieved unknown message: '+data);
   }
 
-  reconnect();
+  if (!gameOver) reconnect();
 }  
 
 
@@ -285,8 +305,7 @@ function receive(data)
 // *************************************************************
 players = ["you"]
 currentLeader = null;
-canPlayCard = false
-gameOver = false;
+canPlayCard = false;
 
 function playerJoined(name, position)
 {
@@ -359,6 +378,19 @@ function setStatus(status)
   getPlayer(0).find('.statusBox').text(status)
 }
 
+function onGameOver(message)
+{
+  gameOver = true;
+  connection = null;
+  alert("Game over: "+message)
+  setStatus("Game Over.")
+  
+  $('#leadArrow').fadeOut(2000)
+  
+  setTimeout(function() {
+    $(window.location).attr('href', '/');
+  }, 2000);
+}
 
 
 
@@ -374,66 +406,65 @@ $(function()
 {  
   // Register bid events:
   $('#bid00').click(function()
-      {
-        send({'00' : true});
-        $('#showHand').hide()
-        $('#bid00').hide()    
-        return false;
-      });
-      
-      $('#showHand').click(function()
-      {
-        if ($('#bid00').is(":visible"))
-        {
-          send({'00' : false});
-        }
-        else
-        {
-          send({'async' : true,
-                'type' : 'hand'})
-        }
-        $('#showHand').hide()
-        $('#bid00').hide()    
-        return false;    
-      });
-      
-      $('#bid0').click(function()
-      {
-        send({'bid' : 0});
-        $('.bidWindow').hide()
-        return false;    
-      });  
-      
-      $('#incBid').click(function()
-      {
-        if (bidButtonValue < 13)
-        {
-          bidButtonValue += 1
-        }
-        $('#bidButtonValue').text(bidButtonValue)
-        $('#bidPointsValue').text(bidButtonValue * 10)
-        return false;    
-      });
-      
-      $('#decBid').click(function()
-      {
-        if (bidButtonValue > 1)
-        {
-          bidButtonValue -= 1      
-        }
-        $('#bidButtonValue').text(bidButtonValue)
-        $('#bidPointsValue').text(bidButtonValue * 10)
-        return false;
-      });    
-      
-      $('#bidButton').click(function()
-      {
-        send({'bid' : bidButtonValue})
-        bidButtonValue = 1
-        $('#bidButtonValue').text(bidButtonValue)
-        $('.bidWindow').hide()
-        return false;    
-      });
+  {
+    send({'00' : true});
+    $('#showHand').hide()
+    $('#bid00').hide()    
+    return false;
+  });
+  
+  $('#showHand').click(function()
+  {
+    if ($('#bid00').is(":visible"))
+    {
+      send({'00' : false});
+    }
+    else
+    {
+      send({'type' : 'hand'})
+    }
+    $('#showHand').hide()
+    $('#bid00').hide()    
+    return false;    
+  });
+  
+  $('#bid0').click(function()
+  {
+    send({'bid' : 0});
+    $('.bidWindow').hide()
+    return false;    
+  });  
+  
+  $('#incBid').click(function()
+  {
+    if (bidButtonValue < 13)
+    {
+      bidButtonValue += 1
+    }
+    $('#bidButtonValue').text(bidButtonValue)
+    $('#bidPointsValue').text(bidButtonValue * 10)
+    return false;    
+  });
+  
+  $('#decBid').click(function()
+  {
+    if (bidButtonValue > 1)
+    {
+      bidButtonValue -= 1      
+    }
+    $('#bidButtonValue').text(bidButtonValue)
+    $('#bidPointsValue').text(bidButtonValue * 10)
+    return false;
+  });    
+  
+  $('#bidButton').click(function()
+  {
+    send({'bid' : bidButtonValue})
+    bidButtonValue = 1
+    $('#bidButtonValue').text(bidButtonValue)
+    $('.bidWindow').hide()
+    return false;    
+  });
 })
 
 function setBid(position, value)
@@ -514,14 +545,18 @@ function setHand(hand)
   for (i in hand)
   {
     var card = hand[i]
-    var cardImage = suits[parseInt(card['suit'])] + "_" + values[parseInt(card['value'])] + ".png"
-    var cardElement = $("<div href='#' class='cardInHand'><img class='card' src='/static/cards/"+cardImage+"' /></div>")  
+    var cardImage = suits[parseInt(card['suit'])] + "_" + 
+                    values[parseInt(card['value'])] + ".png"
+    var cardElement = $("<div href='#' class='cardInHand'><img class='card' src='/static/cards/" + 
+                        cardImage + "' /></div>")  
     $('#hand').append(cardElement);
     
     // Write down the value of this card.
     cardElement.data('suit', card['suit'])
     cardElement.data('value', card['value'])
   }
+  
+  // Register card events:  
   
   $('.cardInHand').mouseenter(function()
   {
@@ -549,8 +584,6 @@ function setHand(hand)
       $('.highlightedCard').css('paddingRight', 0)
     }    
   });    
-  
-  // Register card events:
   
   $('.cardInHand').mouseleave(function(e)
   {
@@ -596,7 +629,7 @@ function isValidCard(leadSuit, suit)
 }
 
 function spreadHandEvenly(animate)
-{
+{  
   var hand = $('#hand')
   var cards = $('.cardInHand')
   cards.css('width', '200px')  
@@ -660,6 +693,18 @@ function playCard(card)
                       send({'card' : { 'suit' : suit, 'value' : value }}) 
                     })
   
+  // If that's not the end of the trick, point at the next person in line.
+  if ($('body > .card').length < 4)
+  {
+    // Point the arrow at the next person.
+    setLeader(1)  
+    setStatus("Waiting for "+players[1]+" to play")
+  }                    
+  else
+  {
+    setStatus("Deciding Winner...")
+  }
+                    
   canPlayCard = false;  
 }
 
@@ -668,6 +713,19 @@ function cardPlayed(position, card)
   // We already know about any cards we played.
   if (position == 0) return;
   
+  // < 4 cards on the table, look at the next person whose turn it is.
+  if ($('body > .card').length < 4)
+  {
+    // Point the arrow at them.
+    setLeader((position + 1) % 4)  
+    setStatus("Waiting for "+players[(position + 1) % 4]+" to play")
+  }
+  else
+  {
+    setStatus("Deciding Winner...")
+  }  
+
+  // Work out the suit situation so we know what cards are valid.
   if (leadSuit == null)
   {
     leadSuit = card['suit']
@@ -681,6 +739,7 @@ function cardPlayed(position, card)
     })
   }
   
+  // Show the played card.
   var width = $(window).width()
   var height = $(window).height()
   switch(position)
@@ -696,8 +755,10 @@ function cardPlayed(position, card)
       break;
   }  
   
-  var cardImage = suits[parseInt(card['suit'])] + "_" + values[parseInt(card['value'])] + ".png"
-  var cardElement = $("<img class='card' style='z-index: -2; position:absolute; "+position+"' src='/static/cards/"+cardImage+"' />")
+  var cardImage = suits[parseInt(card['suit'])] + "_" + 
+                  values[parseInt(card['value'])] + ".png"
+  var cardElement = $("<img class='card' style='z-index: -2; position:absolute; "+
+                      position+"' src='/static/cards/"+cardImage+"' />")
   $('body').append(cardElement);
 }
 
